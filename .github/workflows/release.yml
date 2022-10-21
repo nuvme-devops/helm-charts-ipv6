@@ -22,5 +22,5 @@ jobs:
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.1.0
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           APPEND_TO_RELEASE: true
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
