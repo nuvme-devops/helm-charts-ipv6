@@ -10,7 +10,7 @@ version: 0.20.0
 # https://github.com/helm/helm/blob/master/docs/charts.md#the-appversion-field
 # To avoid confusion, we will not expose appVersion
 # appVersion: 0.0.1
-home: https://github.com/timescale/helm-charts
+home: https://github.com/nuvme-devops/helm-charts-ipv6
 sources:
   - https://github.com/timescale/helm-charts
   - https://github.com/timescale/timescaledb-docker-ha
