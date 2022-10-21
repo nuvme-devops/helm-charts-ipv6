@@ -108,7 +108,7 @@ data:
           username: standby
         superuser:
           username: postgres
-      listen: [::]:5432
+      listen: "[::]:5432"
       pg_hba:
       - local     all             postgres                              peer
       - local     all             all                                   md5
@@ -119,5 +119,5 @@ data:
       - hostssl   all             all                all                md5
       use_unix_socket: true
     restapi:
-      listen: [::]:8008
+      listen: "[::]:8008"
 ...
