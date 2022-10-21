@@ -1,72 +1,25 @@
-name: Release Chart
+name: Release Charts
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
-
-env:
-  helm-version: v3.10.1
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Set up Helm
-        uses: azure/setup-helm@v3.3
-        with:
-          version: ${{ env.helm-version }}
-
-      - name: 'Get Latest tag'
-        id: latesttag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-
-      - name: Figure out chart to Release
-        id: chart
+      - name: Configure Git
         run: |
-          for chart in $(git diff --find-renames --name-only ${{ steps.latesttag.outputs.tag }} -- charts/ | cut -d '/' -f2 | sort | uniq); do
-            if [[ -f "charts/${chart}/Chart.yaml" ]]; then
-              echo "::set-output name=chart::$chart"
-              break
-            else
-              echo "WARNING: $file is missing, assuming that '$chart' is not a Helm chart. Skipping." 1>&2
-            fi
-          done
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: Get helm chart version
-        id: chartversion
-        run: echo "::set-output name=version::$(grep '^version:' charts/${{ steps.chart.outputs.chart }}/Chart.yaml | cut -d ":" -f2 | tr -d ' ')"
-
-      - name: Install helm-s3 plugin
-        run: |
-          helm plugin install https://github.com/hypnoglow/helm-s3.git
-
-      - name: Packages ${{ steps.chart.outputs.chart }} chart
-        run: |
-          mkdir -p dist/
-          helm package charts/${{ steps.chart.outputs.chart }} -d dist/
-
-      - name: Publish ${{ steps.chart.outputs.chart }}-${{ steps.chartversion.outputs.version }}
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.1.0
         env:
-          AWS_REGION: 'us-east-1'
-          AWS_ACCESS_KEY_ID: ${{ secrets.ORG_AWS_HELM_CHART_BUCKET_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.ORG_AWS_HELM_CHART_BUCKET_SECRET_ACCESS_KEY }}
-        run: |
-            helm repo add tscharts s3://charts.timescale.com
-            helm s3 push dist/* tscharts --acl public-read --relative --ignore-if-exists
-
-      - name: Create release
-        uses: ncipollo/release-action@v1.11.1
-        with:
-          tag: ${{ steps.chart.outputs.chart }}-${{ steps.chartversion.outputs.version }}
-          allowUpdates: true
-          generateReleaseNotes: true
-          artifacts: "dist/*.tgz"
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
